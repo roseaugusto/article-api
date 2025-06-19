@@ -1,4 +1,3 @@
-
 import {
   Controller,
   Get,
@@ -7,25 +6,38 @@ import {
   Body,
   Put,
   Delete,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
-import { UsersService } from './user.service';
+import { UsersService } from './user/user.service';
 import { PostsService } from './post.service';
 import { AppService } from './app.service';
-import { User as UserModel, Post as PostModel } from '../generated/prisma';
+import { AuthService } from './auth/auth.service';
+import { User as UserModel, Post as PostModel } from '@prisma/client';
+import { JwtAuthGuard } from './auth/jwt-aut.guard';
+import { LocalAuthGuard } from './auth/local-auth.guard';
 
 @Controller()
 export class AppController {
   constructor(
     private readonly userService: UsersService,
     private readonly postService: PostsService,
-    private readonly appService: AppService
+    private readonly appService: AppService,
+    private readonly authService: AuthService,
   ) {}
+
+  @UseGuards(LocalAuthGuard)
+  @Post('auth/login')
+  async login(@Request() req: any) {
+    return this.authService.login(req.user);
+  }
 
   @Get()
   getHello(): string {
     return this.appService.getHello();
   }
 
+  @UseGuards(JwtAuthGuard)
   @Get('post/:id')
   async getPostById(@Param('id') id: string): Promise<PostModel | null> {
     return this.postService.post({ id: Number(id) });
@@ -72,7 +84,7 @@ export class AppController {
 
   @Post('user')
   async signupUser(
-    @Body() userData: { name?: string; email: string },
+    @Body() userData: { name?: string; email: string; password: string },
   ): Promise<UserModel> {
     return this.userService.createUser(userData);
   }

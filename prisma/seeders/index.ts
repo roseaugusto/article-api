@@ -1,4 +1,4 @@
-import { PrismaClient } from '../../generated/prisma';
+import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
@@ -8,6 +8,7 @@ async function main() {
     create: {
       email: 'user1@gmail.com',
       name: 'User 1',
+      password: '1234',
       posts: {
         create: {
           title: 'Check out Prisma with Next.js',
